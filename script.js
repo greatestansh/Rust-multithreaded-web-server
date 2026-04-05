@@ -1,12 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Rust server successfully loaded the JavaScript file.");
-    
     const btn = document.getElementById('actionBtn');
     const msg = document.getElementById('statusMsg');
     
     btn.addEventListener('click', () => {
-        msg.textContent = "> All systems nominal. Client-side JS operational.";
+        // Multi-line terminal output
+        msg.innerHTML = "> Executing payload...<br>> Checking thread pool... OK.<br>> All systems nominal.";
+        msg.style.color = "#4caf50"; // Bright green text
+        
+        // Change button appearance to show it worked
+        btn.textContent = "Diagnostic Complete";
+        btn.style.backgroundColor = "#2e7d32";
+        btn.style.color = "white";
+        btn.style.transform = "none";
+        btn.style.boxShadow = "none";
         btn.disabled = true;
-        btn.style.opacity = '0.5';
     });
 });

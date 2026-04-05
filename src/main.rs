@@ -5,57 +5,85 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 // i) Custom Thread Pool Implementation (better than naive threading because of memory management and performance)
+
+
+// A unit of work executed by the pool
+type Job = Box<dyn FnOnce() + Send + 'static>;
+
 pub struct ThreadPool {
     workers: Vec<Worker>,
+    // Wrapped in Option so we can gracefully shut down later
     sender: Option<mpsc::Sender<Job>>,
 }
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
-
 struct Worker {
     id: usize,
-    thread: Option<thread::JoinHandle<()>>,
+    handle: Option<thread::JoinHandle<()>>,
 }
 
 impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0);
+    /// Create a new thread pool with a fixed number of workers
+    pub fn new(size: usize) -> Self {
+        assert!(size > 0, "Thread pool size must be greater than zero");
+
         let (sender, receiver) = mpsc::channel();
-        let receiver = Arc::new(Mutex::new(receiver));
+        let shared_receiver = Arc::new(Mutex::new(receiver));
+
         let mut workers = Vec::with_capacity(size);
 
         for id in 0..size {
-            workers.push(Worker::new(id, Arc::clone(&receiver)));
+            workers.push(Worker::spawn(id, Arc::clone(&shared_receiver)));
         }
 
-        ThreadPool {
+        Self {
             workers,
             sender: Some(sender),
         }
     }
 
-    pub fn execute<F>(&self, f: F)
+    /// Submit a task to be executed by the pool
+    pub fn execute<F>(&self, task: F)
     where
         F: FnOnce() + Send + 'static,
     {
-        let job = Box::new(f);
-        self.sender.as_ref().unwrap().send(job).unwrap();
+        let job = Box::new(task);
+
+        // Using expect gives a clearer failure message than unwrap
+        self.sender
+            .as_ref()
+            .expect("ThreadPool has been shut down")
+            .send(job)
+            .expect("Failed to send job to worker threads");
     }
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = thread::spawn(move || loop {
-            let message = receiver.lock().unwrap().recv();
-            match message {
-                Ok(job) => job(),
-                Err(_) => break,
+    /// Spawn a new worker thread that continuously pulls jobs
+    fn spawn(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Self {
+        let handle = thread::spawn(move || {
+            loop {
+                // Lock scope kept tight to avoid holding the mutex unnecessarily
+                let job_result = {
+                    let lock = receiver.lock().expect("Worker failed to lock receiver");
+                    lock.recv()
+                };
+
+                match job_result {
+                    Ok(job) => {
+                        // You might log here in a real server
+                        job();
+                    }
+                    Err(_) => {
+                        // Channel closed => shutdown signal
+                        break;
+                    }
+                }
             }
         });
 
-        Worker {
+        Self {
             id,
-            thread: Some(thread),
+            handle: Some(handle),
         }
     }
 }
@@ -63,52 +91,75 @@ impl Worker {
 //  ii) Web Server Implementation with Visitor Counter (using Arc and Mutex for thread safety)
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
-    let pool = ThreadPool::new(4); // Requirement: Handle up to 4 incoming connections
-    
-    // Shared visitor counter using Arc and Mutex for thread safety
+    // Bind server to localhost:8000
+    let listener = TcpListener::bind("127.0.0.1:8000")
+        .expect("Failed to bind to address");
+
+    // Fixed-size thread pool
+    let pool = ThreadPool::new(4);
+
+    // Shared state: visitor counter
     let visitor_count = Arc::new(Mutex::new(0));
 
-    println!("Server listening on port 8000...");
+    println!("Server running at http://127.0.0.1:8000");
 
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        let counter_clone = Arc::clone(&visitor_count);
+    for incoming in listener.incoming() {
+        let stream = match incoming {
+            Ok(stream) => stream,
+            Err(err) => {
+                eprintln!("Connection failed: {}", err);
+                continue;
+            }
+        };
+
+        let counter = Arc::clone(&visitor_count);
 
         pool.execute(move || {
-            handle_connection(stream, counter_clone);
+            handle_connection(stream, counter);
         });
     }
 }
 
 fn handle_connection(mut stream: TcpStream, counter: Arc<Mutex<usize>>) {
-    let buf_reader = BufReader::new(&mut stream);
-    let request_line = match buf_reader.lines().next() {
+    let mut reader = BufReader::new(&mut stream);
+
+    // Extract the first request line (e.g., "GET / HTTP/1.1")
+    let request_line = match reader.lines().next() {
         Some(Ok(line)) => line,
-        _ => return,
+        _ => {
+            eprintln!("Failed to read request line");
+            return;
+        }
     };
 
-    let (status_line, filename, content_type, increment_counter) = match &request_line[..] {
+    // Route handling (basic pattern matching)
+    let (status, file, content_type, should_count) = match request_line.as_str() {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html", "text/html", true),
         "GET /style.css HTTP/1.1" => ("HTTP/1.1 200 OK", "style.css", "text/css", false),
         "GET /script.js HTTP/1.1" => ("HTTP/1.1 200 OK", "script.js", "application/javascript", false),
-        _ => ("HTTP/1.1 404 NOT FOUND", "404.html", "text/html", false), // Optional 404 handling
+        _ => ("HTTP/1.1 404 NOT FOUND", "404.html", "text/html", false),
     };
 
-    // Only increment counter for main page visits, not for fetching CSS/JS
-    if increment_counter {
-        let mut num = counter.lock().unwrap();
-        *num += 1;
-        println!("Visitor count: {}", *num);
+    // Update visitor count only for main page hits
+    if should_count {
+        let mut count = counter.lock().expect("Failed to lock counter");
+        *count += 1;
+        println!("Visitors so far: {}", *count);
     }
 
-    // Read file contents (ensure these files exist in your root directory)
-    let contents = fs::read_to_string(filename).unwrap_or_else(|_| String::from("File not found"));
-    let length = contents.len();
+    // Load file contents
+    let body = fs::read_to_string(file)
+        .unwrap_or_else(|_| String::from("<h1>404 - File not found</h1>"));
 
     let response = format!(
-        "{status_line}\r\nContent-Length: {length}\r\nContent-Type: {content_type}\r\n\r\n{contents}"
+        "{status}\r\nContent-Length: {}\r\nContent-Type: {}\r\n\r\n{}",
+        body.len(),
+        content_type,
+        body
     );
 
-    stream.write_all(response.as_bytes()).unwrap();
+    // Send response
+    if let Err(err) = stream.write_all(response.as_bytes()) {
+        eprintln!("Failed to send response: {}", err);
+    }
 }

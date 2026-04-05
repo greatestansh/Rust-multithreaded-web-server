@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rust Web Server Active</title>
+    <title>Rust Server Active</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Server is Live Dawg!!!</h1>
-        <p>Served natively by a custom multithreaded Rust web server.</p>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>Server Live Dawg</h1>
+            <span class="badge">Online</span>
+        </div>
+        <p>Served natively by your custom Rust thread pool.(Fireship would be proud ;))</p>
         
         <div class="card">
-            <h2>Developer Hub</h2>
-            <p>Ready for high-performance web development and handling parallel connections.(fireship would be proud)</p>
+            <h2>Command Module</h2>
+            <p>Ready for high-performance payload execution.</p>
             <button id="actionBtn">Run Diagnostic</button>
-            <p id="statusMsg"></p>
+            <div class="terminal-output" id="statusMsg">Waiting for input...</div>
         </div>
     </div>
     
