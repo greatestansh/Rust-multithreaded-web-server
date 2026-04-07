@@ -25,58 +25,57 @@ Creating a new thread for every single web request can overwhelm a system. Inste
 Each worker reads all incoming bytes using `BufReader` when the stream comes to its turn in the queue. The very first line of request (such as `GET / HTTP/1.1`) will determine what static file it will use according to pattern matching. Then, worker builds an appropriate HTTP Response with correct headers (`Content-Type` and `Content-Length`) for the response body.
 
 ### 3. The Shared Visitor Counter
-To count visitors, the server uses a shared integer: `Arc<Mutex<usize>>`. 
-Whenever the main page (`/`) is hit, the worker thread locks the mutex, safely increments the counter, and unlocks it. This guarantees that simultaneous requests do not overwrite each other's counts.
+To keep track of visitors, the server relies on a shared integer: `Arc<Mutex<usize>>`. Each time someone hits the main page (`/`), the worker thread locks the mutex, increments the counter safely, and then unlocks it. This approach ensures that multiple requests don’t mess up each other’s counts.
 
 ### 4. Frontend Architecture
-The server natively hosts a dark-themed "Developer Hub" UI to demonstrate successful file routing and MIME-type handling:
-* **HTML (`index.html`):** Provides the semantic structure and links to the requested assets.
-* **CSS (`style.css`):** Proves the server can handle `text/css` content types. It utilizes a modern dark gradient background, CSS variables, and hover transitions for a polished UI.
-* **JavaScript (`script.js`):** Proves the server can handle `application/javascript` execution. It features an interactive "terminal" output screen that responds to user clicks, verifying that client-side scripts are successfully delivered and executed by the browser.
+The server comes with a built-in dark-themed "Developer Hub" UI that showcases how file routing and MIME-type handling work:
+* **HTML (`index.html`):** This file lays out the semantic structure and links to the necessary assets.
+* **CSS (`style.css`):** This demonstrates the server's ability to manage `text/css` content types. It features a sleek dark gradient background, CSS variables, and smooth hover transitions for a refined user experience.
+* **JavaScript (`script.js`):** This shows that the server can execute `application/javascript`. It includes an interactive terminal output screen that reacts to user clicks, confirming that client-side scripts are being delivered and executed properly by the browser.
 
 ---
 
-## Why Rust is considered the best choice for web server? (Relatively Unique Safety and Concurrency features)
+ ## Why Rust is considered the best choice for web server? (Relatively Unique Safety and Concurrency features)
 
-Building a multithreaded server in traditional systems languages (like C or C++) often leads to dangerous bugs such as data races, use-after-free errors, or null pointer dereferences. Rust eliminates these at compile time.
+When it comes to building a multithreaded server using traditional systems languages like C or C++, developers often run into tricky bugs like data races, use-after-free errors, or null pointer dereferences. Rust steps in to eliminate these issues right at compile time.
 
 ### The Borrow Checker & Data Races
-Rust's borrow checker enforces a strict rule: you can have either multiple immutable references to data, or exactly one mutable reference, but never both simultaneously. 
-* **Advantage:** In this server, multiple threads need to mutate the `visitor_count`. The borrow checker strictly prevents plain sharing. It forces the use of a `Mutex` to guarantee exclusive access, and an `Arc` (Atomic Reference Counted pointer) to safely manage the memory lifecycle across threads. If the `Mutex` is forgotten, the code simply will not compile, making data races impossible.
+Rust's borrow checker has a clear rule: you can either have multiple immutable references to data or just one mutable reference, but never both at the same time.
+* **Advantage:** In our server, multiple threads need to update the `visitor_count`. The borrow checker prevents simple sharing, compelling us to use a `Mutex` for exclusive access and an `Arc` (Atomic Reference Counted pointer) to manage memory safely across threads. If we forget the `Mutex`, the code won’t compile, effectively making data races impossible.
 
 ### Type Safety & Error Handling
-* **No Null Pointers:** Rust does not have `null`. Instead, it uses the `Option` enum. In our `Worker` struct, the thread `handle` is stored as an `Option`. This forces the developer to explicitly handle the case where a thread might not exist, preventing null dereference crashes.
-* **No Hidden Exceptions:** Operations that can fail return a `Result<T, E>`. In this code, `match` statements and `if let` constructs are used to explicitly handle errors. If a file is missing, the server catches the `Err` and serves a 404 page instead of crashing.
+* **No Null Pointers:** Rust doesn’t deal with `null`. Instead, it uses the `Option` enum. In our `Worker` struct, the thread `handle` is stored as an `Option`, which means developers must explicitly handle the scenario where a thread might not exist, thus avoiding those nasty null dereference crashes.
+* **No Hidden Exceptions:** Any operation that might fail returns a `Result<T, E>`. In this code, we use `match` statements and `if let` constructs to handle errors directly. If a file is missing, the server catches the `Err` and serves a 404 page instead of crashing.
 
 ### Concurrency Traits (`Send` and `Sync`)
-Rust's type system is aware of concurrency. The `ThreadPool` accepts jobs of type `Box<dyn FnOnce() + Send + 'static>`. The `Send` trait is a compile-time guarantee that the closure is safe to be transferred from the main thread to a worker thread. 
-
+Rust’s type system is built with concurrency in mind. The `ThreadPool` takes jobs of type `Box<dyn FnOnce() + Send + 'static>`. The `Send` trait acts as a compile-time assurance that the closure can be safely moved from the main thread to a worker thread.
 ---
 
-## Cargo & The Build System
 
-This project is managed by **Cargo**, Rust's official package manager and build system. Cargo handles compiling the code, downloading dependencies (though this project strictly uses the standard library), and linking the final executable.
+# Cargo & The Build System
+
+This project is powered by **Cargo**, which is Rust's official package manager and build system. Cargo takes care of compiling the code, downloading dependencies (though for this project, we’re sticking to the standard library), and linking everything together to create the final executable.
 
 ### The `Cargo.toml` File
-This file sits at the root of the project and acts as the manifest. It defines the project's metadata (name, version) and ensures the compiler knows exactly how to build the application.
+At the heart of the project lies the `Cargo.toml` file, which serves as the manifest. It outlines the project's metadata, like its name and version, and makes sure the compiler knows exactly how to build the application.
 
 ### Getting Started & Running the Server
 
 **1. Prerequisites**
-Ensure you have the Rust toolchain installed. You can verify this by running:\
+First things first, make sure you have the Rust toolchain installed. You can check this by running:\
 cargo --version
 
 **Running the Server**\
-1.Clone the repository and navigate to the project directory.\
-2.Run the application:\
+1. Clone the repository and head over to the project directory.\
+2. Start the application by running:\
 cargo run\
-3.Open the browser and navigate to this localhost http://127.0.0.1:8000\
+3. Open your browser and go to this localhost: http://127.0.0.1:8000\
 
 ## 🐳Docker Deployment
-This application is containerized using a multi-stage Docker build to ensure maximum efficiency.
+This application is packaged using a multi-stage Docker build to maximize efficiency.
 
-Stage 1 (Build): Uses the official rust image to compile the application. This image contains all necessary build tools and toolchains. The project is built using cargo build --release for optimized performance.
+Stage 1 (Build): We use the official Rust image to compile the application. This image comes with all the necessary build tools and toolchains. The project is built with cargo build --release for optimal performance.
 
-Stage 2 (Runtime): Uses a minimal debian-slim image. We Only copy the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
+Stage 2 (Runtime): Here, we switch to a minimal debian-slim image. We only copy over the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
 
- This discards the heavy Rust compiler and source code from the final image, resulting in a tiny, secure, and production-ready container that can be easily deployed to services like AWS ECS, Google Cloud Run, or a VPS.
+This approach eliminates the bulky Rust compiler and source code from the final image, resulting in a lightweight, secure, and production-ready container that can be easily deployed to services like AWS ECS, Google Cloud Run, or a VPS.
