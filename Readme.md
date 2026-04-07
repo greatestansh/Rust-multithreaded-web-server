@@ -49,11 +49,9 @@ Rust's borrow checker has a clear rule: you can either have multiple immutable r
 
 ### Concurrency Traits (`Send` and `Sync`)
 Rust’s type system is built with concurrency in mind. The `ThreadPool` takes jobs of type `Box<dyn FnOnce() + Send + 'static>`. The `Send` trait acts as a compile-time assurance that the closure can be safely moved from the main thread to a worker thread.
----
 
 
 # Cargo & The Build System
-
 This project is powered by **Cargo**, which is Rust's official package manager and build system. Cargo takes care of compiling the code, downloading dependencies (though for this project, we’re sticking to the standard library), and linking everything together to create the final executable.
 
 ### The `Cargo.toml` File
@@ -74,8 +72,8 @@ cargo run\
 ## 🐳Docker Deployment
 This application is packaged using a multi-stage Docker build to maximize efficiency.
 
-Stage 1 (Build): We use the official Rust image to compile the application. This image comes with all the necessary build tools and toolchains. The project is built with cargo build --release for optimal performance.
+**Stage 1 (Build):** We use the official Rust image to compile the application. This image comes with all the necessary build tools and toolchains. The project is built with cargo build --release for optimal performance.
 
-Stage 2 (Runtime): Here, we switch to a minimal debian-slim image. We only copy over the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
+**Stage 2 (Runtime):** Here, we switch to a minimal debian-slim image. We only copy over the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
 
 This approach eliminates the bulky Rust compiler and source code from the final image, resulting in a lightweight, secure, and production-ready container that can be easily deployed to services like AWS ECS, Google Cloud Run, or a VPS.
