@@ -64,8 +64,8 @@ This file sits at the root of the project and acts as the manifest. It defines t
 
 **1. Prerequisites**
 Ensure you have the Rust toolchain installed. You can verify this by running:
-```bash
 cargo --version
+
 **Running the Server**
 1.Clone the repository and navigate to the project directory.
 2.Run the application:
