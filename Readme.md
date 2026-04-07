@@ -63,11 +63,11 @@ This file sits at the root of the project and acts as the manifest. It defines t
 ### Getting Started & Running the Server
 
 **1. Prerequisites**
-Ensure you have the Rust toolchain installed. You can verify this by running:
+Ensure you have the Rust toolchain installed. You can verify this by running:\
 cargo --version
 
 **Running the Server**
-1.Clone the repository and navigate to the project directory.
-2.Run the application:
-cargo run
-3.Open the browser and navigate to this localhost http://127.0.0.1:8000
+1.Clone the repository and navigate to the project directory.\
+2.Run the application:\
+cargo run\
+3.Open the browser and navigate to this localhost http://127.0.0.1:8000\
