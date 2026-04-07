@@ -1,0 +1,34 @@
+
+# Stage 1: The Builder
+
+# Use the official Rust image as our build environment
+FROM rust:1.75 AS builder
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the entire project into the container
+COPY . .
+
+# Build the application in release mode for maximum performance
+RUN cargo build --release
+
+# Stage 2: The Runner
+
+# Use a minimal Debian image for the final runtime
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Copy the compiled binary from the 'builder' stage
+COPY --from=builder /usr/src/app/target/release/rust-webserver /usr/local/bin/rust-webserver
+
+# Copy your static front-end files
+# (Assuming they are in the root or a 'static' folder)
+COPY index.html style.css script.js ./
+
+# Expose the port your server listens on (e.g., 8000)
+EXPOSE 8000
+
+# Command to run the executable
+CMD ["rust-webserver"]

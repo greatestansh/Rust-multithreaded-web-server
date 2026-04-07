@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Replaced flat color with a subtle, modern gradient */
+    
     background: linear-gradient(135deg, #0f0f13 0%, #1a1a24 100%);
     color: #e0e0e0;
     display: flex;
@@ -72,7 +72,7 @@ button:hover {
     box-shadow: 0 4px 15px rgba(222, 165, 132, 0.3);
 }
 
-/* New Terminal-style output box */
+/*Terminal-style output box */
 .terminal-output {
     background: #000;
     padding: 1rem;

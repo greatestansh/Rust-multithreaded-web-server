@@ -66,8 +66,17 @@ This file sits at the root of the project and acts as the manifest. It defines t
 Ensure you have the Rust toolchain installed. You can verify this by running:\
 cargo --version
 
-**Running the Server**
+**Running the Server**\
 1.Clone the repository and navigate to the project directory.\
 2.Run the application:\
 cargo run\
 3.Open the browser and navigate to this localhost http://127.0.0.1:8000\
+
+### 🐳Docker Deployment
+This application is containerized using a multi-stage Docker build to ensure maximum efficiency.\
+
+Stage 1 (Build): Uses the official rust image to compile the application. This image contains all necessary build tools and toolchains. The project is built using cargo build --release for optimized performance.\
+
+Stage 2 (Runtime): Uses a minimal debian-slim image. We Only copy the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
+
+ This discards the heavy Rust compiler and source code from the final image, resulting in a tiny, secure, and production-ready container that can be easily deployed to services like AWS ECS, Google Cloud Run, or a VPS.\
