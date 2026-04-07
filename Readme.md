@@ -36,7 +36,7 @@ The server natively hosts a dark-themed "Developer Hub" UI to demonstrate succes
 
 ---
 
-## Why Rust is considered the best choice here? (Safety and Concurrency Guarantees)
+## Why Rust is considered the best choice for web server? (Relatively Unique Safety and Concurrency features)
 
 Building a multithreaded server in traditional systems languages (like C or C++) often leads to dangerous bugs such as data races, use-after-free errors, or null pointer dereferences. Rust eliminates these at compile time.
 
@@ -66,3 +66,8 @@ This file sits at the root of the project and acts as the manifest. It defines t
 Ensure you have the Rust toolchain installed. You can verify this by running:
 ```bash
 cargo --version
+**Running the Server**
+1.Clone the repository and navigate to the project directory.
+2.Run the application:
+cargo run
+3.Open the browser and navigate to this localhost http://127.0.0.1:8000
