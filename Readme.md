@@ -6,10 +6,10 @@ This project demonstrates core systems programming concepts, including raw TCP s
 
 ## Features
 * **Custom Thread Pool:** Manages a fixed number of worker threads (4) to handle multiple incoming TCP connections simultaneously without the overhead of spawning a new thread for every request.
-* **Static File Routing:** Parses raw HTTP `GET` requests to serve HTML, CSS, and JavaScript files safely, including a 404 fallback.
-* **Shared State Management:** Safely tracks a global visitor count across multiple concurrent threads.
-* **Panic-Free Error Handling:** Uses pattern matching and `Result` types to gracefully handle missing files and malformed requests without crashing the server.
-* **Zero-Dependency Frontend:** Serves a modern, responsive developer hub using pure HTML, CSS, and Vanilla JavaScript.
+* **Static File Routing:** It parses raw HTTP GET requests to safely serve HTML, CSS, and JavaScript and provides a default 404 response when no file is found..
+* **Shared State Management:** * Safely manages an internal state (the amount of visitors) between multiple threads.
+** **Panic-Free Response to Error Conditions:** Implements error-handling with pattern matching and `Result` types to return errors without causing a panic and crashing the server.
+* **Zero-Dependency Frontend:**  Hosts a modern developer hub frontend using only HTML, CSS, and vanilla JS.
 
 ---
 
@@ -18,11 +18,11 @@ This project demonstrates core systems programming concepts, including raw TCP s
 ### 1. The Thread Pool Architecture
 Creating a new thread for every single web request can overwhelm a system. Instead, this server uses a **Thread Pool** pattern:
 * **The Channel (`mpsc`):** A Multiple-Producer, Single-Consumer channel acts as a queue. The main thread (Producer) accepts incoming TCP connections and sends them down the channel as `Job`s (closures).
-* **The Workers:** The server spawns 4 worker threads upon startup. These threads loop infinitely, waiting for jobs to appear in the channel.
-* **Locking the Queue:** Because `mpsc` only allows one consumer, the receiving end of the channel is wrapped in an `Arc<Mutex<Receiver>>`. Workers compete to lock the mutex, grab a job, unlock the mutex, and execute the HTTP request.
+* **The Workers:** 4 workers get started after server booting and work infinitely in a loop, waiting for jobs to appear in the channel
+* **Locking the Queue:** As we have only one consumer from `mpsc` channel, the receiving side of the channel is wrapped inside `Arc<Mutex<Receiver>>`.  Workers compete to lock the mutex, get a job(lol), unlock the mutex, and execute the HTTP request.
 
 ### 2. The Request Handler
-When a worker receives a `TcpStream`, it reads the incoming bytes using a `BufReader`. It extracts the first line of the HTTP request (e.g., `GET / HTTP/1.1`) and uses pattern matching to route the request to the correct static file. It then formats a valid HTTP response containing the appropriate headers (like `Content-Type` and `Content-Length`) and streams it back to the client.
+Each worker reads all incoming bytes using `BufReader` when the stream comes to its turn in the queue. The very first line of request (such as `GET / HTTP/1.1`) will determine what static file it will use according to pattern matching. Then, worker builds an appropriate HTTP Response with correct headers (`Content-Type` and `Content-Length`) for the response body.
 
 ### 3. The Shared Visitor Counter
 To count visitors, the server uses a shared integer: `Arc<Mutex<usize>>`. 
@@ -36,7 +36,7 @@ The server natively hosts a dark-themed "Developer Hub" UI to demonstrate succes
 
 ---
 
-## Why Rust? (Safety and Concurrency Guarantees)
+## Why Rust is considered the best choice here? (Safety and Concurrency Guarantees)
 
 Building a multithreaded server in traditional systems languages (like C or C++) often leads to dangerous bugs such as data races, use-after-free errors, or null pointer dereferences. Rust eliminates these at compile time.
 
