@@ -55,7 +55,7 @@ Rust’s type system is built with concurrency in mind. The `ThreadPool` takes j
 This project is powered by **Cargo**, which is Rust's official package manager and build system. Cargo takes care of compiling the code, downloading dependencies (though for this project, we’re sticking to the standard library), and linking everything together to create the final executable.
 
 ### The `Cargo.toml` File
-The `Cargo.toml` file lies at the center of our project, which serves as the package manager and a definitive guide. It outlines the project's metadata, like its name and version, and makes sure the compiler knows exactly how to build the application.
+The `Cargo.toml` file lies at the heart  of our project, which serves as the definitive guide. It outlines the project's metadata, like its name and version, and makes sure the compiler knows exactly how to build the application.
 
 ### Getting Started & Running the Server
 
