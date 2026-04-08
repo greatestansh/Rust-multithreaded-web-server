@@ -74,6 +74,6 @@ This application is packaged using a multi-stage Docker build to maximize effici
 
 **Stage 1 (Build):** We use the official Rust image to compile the application. This image comes with all the necessary build tools and toolchains. The project is built with cargo build --release for optimal performance.
 
-**Stage 2 (Runtime):** Here, we switch to a minimal debian-slim image. We only copy over the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.\
+**Stage 2 (Runtime):** Here, we switch to a minimal debian-slim image. We only copy over the final compiled binary and the static assets (HTML, CSS, JS) from the build stage.
 
 This approach eliminates the bulky Rust compiler and source code from the final image, resulting in a lightweight, secure, and production-ready container that can be easily deployed to services like AWS ECS, Google Cloud Run, or a VPS.
