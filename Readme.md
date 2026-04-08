@@ -64,9 +64,9 @@ First things first, make sure you have the Rust toolchain installed. You can che
 cargo --version
 
 **Running the Server**\
-1. Clone the repository and head over to the project directory.\
-2. Start the application by running:\
-cargo run\
+1. Clone the repository and head over to the project directory.
+2. Start the application by running:
+cargo run
 3. Open your browser and go to this localhost: http://127.0.0.1:8000\
 
 ## 🐳Docker Deployment
