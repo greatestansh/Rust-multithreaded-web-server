@@ -21,7 +21,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 # Copy the compiled binary from the 'builder' stage
-COPY --from=builder /usr/src/app/target/release/rust-webserver /usr/local/bin/rust-webserver
+COPY --from=builder /usr/src/app/target/release/rust-multithreaded-web-server /usr/local/bin/rust-multithreaded-web-server
 
 # Copy your static front-end files
 # (Assuming they are in the root or a 'static' folder)
@@ -31,4 +31,4 @@ COPY index.html style.css script.js ./
 EXPOSE 8000
 
 # Command to run the executable
-CMD ["rust-webserver"]
+CMD ["rust-multithreaded-web-server"]
