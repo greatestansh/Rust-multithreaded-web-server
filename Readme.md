@@ -63,11 +63,11 @@ The `Cargo.toml` file lies at the heart  of our project, which serves as the def
 First things first, make sure you have the Rust toolchain installed. You can check this by running:\
 cargo --version
 
-**Running the Server**\
+**Running the Server**
 1. Clone the repository and head over to the project directory.
 2. Start the application by running:
 cargo run
-3. Open your browser and go to this localhost: http://127.0.0.1:8000\
+3. Open your browser and go to this localhost: http://127.0.0.1:8000
 
 ## 🐳Docker Deployment
 This application is packaged using a multi-stage Docker build to maximize efficiency.
