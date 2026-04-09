@@ -74,7 +74,8 @@ impl Worker {
                         job();
                     }
                     Err(_) => {
-                        // Channel closed => shutdown signal
+                        //
+                        //  Channel closed => shutdown signal
                         break;
                     }
                 }
@@ -161,5 +162,5 @@ fn handle_connection(mut stream: TcpStream, counter: Arc<Mutex<usize>>) {
     // Send response
     if let Err(err) = stream.write_all(response.as_bytes()) {
         eprintln!("Failed to send response: {}", err);
-    }
+    }y
 }
