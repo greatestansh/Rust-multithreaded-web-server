@@ -8,7 +8,7 @@ This project demonstrates core systems programming concepts, including raw TCP s
 * **Custom Thread Pool:** Manages a fixed number of worker threads (4) to handle multiple incoming TCP connections simultaneously without the overhead of spawning a new thread for every request.
 * **Static File Routing:** It parses raw HTTP GET requests to safely serve HTML, CSS, and JavaScript and provides a default 404 response when no file is found..
 * **Shared State Management:** * Safely manages an internal state (the amount of visitors) between multiple threads.
-** **Panic-Free Response to Error Conditions:** Implements error-handling with pattern matching and `Result` types to return errors without causing a panic and crashing the server.
+* **Panic-Free Response to Error Conditions:** Implements error-handling with pattern matching and `Result` types to return errors without causing a panic and crashing the server.
 * **Zero-Dependency Frontend:**  Hosts a modern developer hub frontend using only HTML, CSS, and vanilla JS.
 
 ---
